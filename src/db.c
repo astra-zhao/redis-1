@@ -545,7 +545,7 @@ void keysCommand(client *c) {
     void *replylen = addDeferredMultiBulkLength(c);
 
     di = dictGetSafeIterator(c->db->dict);
-    allkeys = (pattern[0] == '*' && pattern[1] == '\0');
+    allkeys = (pattern[0] == '*' && plen == 1);
     while((de = dictNext(di)) != NULL) {
         sds key = dictGetKey(de);
         robj *keyobj;
@@ -857,14 +857,6 @@ void shutdownCommand(client *c) {
             return;
         }
     }
-    /* When SHUTDOWN is called while the server is loading a dataset in
-     * memory we need to make sure no attempt is performed to save
-     * the dataset on shutdown (otherwise it could overwrite the current DB
-     * with half-read data).
-     *
-     * Also when in Sentinel mode clear the SAVE flag and force NOSAVE. */
-    if (server.loading || server.sentinel_mode)
-        flags = (flags & ~SHUTDOWN_SAVE) | SHUTDOWN_NOSAVE;
     if (prepareForShutdown(flags) == C_OK) exit(0);
     addReplyError(c,"Errors trying to SHUTDOWN. Check logs.");
 }
